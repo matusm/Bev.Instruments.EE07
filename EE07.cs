@@ -13,7 +13,7 @@ namespace Bev.Instruments.EE07
         private const int numberTries = 5;              // number of tries before call gives up
         private const int delayTimeForRespond = 900;    // rather long delay nececssary
         // https://docs.microsoft.com/en-us/dotnet/api/system.io.ports.serialport.close?view=dotnet-plat-ext-5.0
-        private const int waitOnClose = 100;            // No actual value is given! One has to experiment with this value
+        private const int waitOnClose = 50;             // No actual value is given! One has to experiment with this value
 
 
         public EE07(string portName)
@@ -97,13 +97,11 @@ namespace Bev.Instruments.EE07
             // the order of the calls is mandatory
 
             var reply = Query(0x58, new byte[] { 0x00, 0x30, 0x1E });
-
             if (reply.Length != 5)
             {
                 // Console.WriteLine($"***** reply {reply.Length} bytes long");
                 return; // we need exactly 5 bytes
             }
-
             if (reply[4] != 0x00)
             {
                 // Console.WriteLine($"***** status byte: {reply[4]}");
@@ -138,7 +136,7 @@ namespace Bev.Instruments.EE07
             groupH = reply[0];
 
             // sensor type - what for?
-            int sensorType = ((int)groupH) * 256 + (int)groupL;
+            int sensorType = groupH * 256 + groupL;
 
             return $"EE{groupL:00}-{subGroup}";
         }
@@ -162,14 +160,15 @@ namespace Bev.Instruments.EE07
             if (reply.Length == 0)
                 return genericString;
 
-            byte[] tempBuffer = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(reply)); // this looks peculiar
+            // this is probably useless 
+            // byte[] tempBuffer = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(reply)); // this looks peculiar
 
             // substitute 0 by space
-            for (int i = 0; i < tempBuffer.Length; i++)
+            for (int i = 0; i < reply.Length; i++)
             {
-                if (tempBuffer[i] == 0) tempBuffer[i] = 0x20;
+                if (reply[i] == 0) reply[i] = 0x20;
             }
-            return Encoding.UTF8.GetString(tempBuffer).Trim();
+            return Encoding.UTF8.GetString(reply).Trim();
         }
 
         private byte[] ComposeCommand(byte BField, byte[] DField)
@@ -304,7 +303,7 @@ namespace Bev.Instruments.EE07
         }
 
         // function for debbuging purposes
-        private string ByteArrayToString(byte[] bytes)
+        private string BytesToString(byte[] bytes)
         {
             string str = "";
             foreach (byte b in bytes)
