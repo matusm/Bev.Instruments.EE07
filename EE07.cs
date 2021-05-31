@@ -15,9 +15,9 @@ namespace Bev.Instruments.EE07
         // https://docs.microsoft.com/en-us/dotnet/api/system.io.ports.serialport.close?view=dotnet-plat-ext-5.0
         private const int waitOnClose = 50;             // No actual value is given! One has to experiment with this value
 
-        private string instrumentType;
-        private string instrumentSerialNumber;
-        private string instrumentFirmwareVersion;
+        private string cachedInstrumentType;
+        private string cachedInstrumentSerialNumber;
+        private string cachedInstrumentFirmwareVersion;
 
 
         public EE07(string portName)
@@ -26,16 +26,15 @@ namespace Bev.Instruments.EE07
             comPort = new SerialPort(DevicePort, 9600);
             comPort.RtsEnable = true;   // this is essential
             comPort.DtrEnable = true;	// this is essential
-            ClearCachedValues();
-            ClearCachedInstrumentID();
+            ClearCache();
         }
 
 
         public string DevicePort { get; }
         public string InstrumentManufacturer => "E+E Elektronik";
-        public string InstrumentType => GetDeviceType();
-        public string InstrumentSerialNumber => GetDeviceSerialNumber();
-        public string InstrumentFirmwareVersion => GetDeviceVersion();
+        public string InstrumentType => GetInstrumentType();
+        public string InstrumentSerialNumber => GetInstrumentSerialNumber();
+        public string InstrumentFirmwareVersion => GetInstrumentVersion();
         public string InstrumentID => $"{InstrumentType} {InstrumentFirmwareVersion} SN:{InstrumentSerialNumber} @ {DevicePort}";
         public double Temperature { get; private set; }
         public double Humidity { get; private set; }
@@ -50,53 +49,50 @@ namespace Bev.Instruments.EE07
             }
         }
 
+        public void ClearCache()
+        {
+            cachedInstrumentType = genericString;
+            cachedInstrumentSerialNumber = genericString;
+            cachedInstrumentFirmwareVersion = genericString;
+            ClearCachedValues();
+        }
+
         private void ClearCachedValues()
         {
             Temperature = double.NaN;
             Humidity = double.NaN;
         }
 
-        private void ClearCachedInstrumentID()
+        private string GetInstrumentType()
         {
-            instrumentType = genericString;
-            instrumentSerialNumber = genericString;
-            instrumentFirmwareVersion = genericString;
+            if (cachedInstrumentType == genericString)
+                cachedInstrumentType = RepeatMethod(_GetInstrumentType);
+            return cachedInstrumentType;
         }
 
-        private string GetDeviceType()
+        private string GetInstrumentVersion()
         {
-            if (string.Compare(instrumentType, genericString) != 0)
-                return instrumentType;
+            if (cachedInstrumentFirmwareVersion == genericString)
+                cachedInstrumentFirmwareVersion = RepeatMethod(_GetInstrumentVersion);
+            return cachedInstrumentFirmwareVersion;
+        }
+
+        private string GetInstrumentSerialNumber()
+        {
+            if (cachedInstrumentSerialNumber == genericString)
+                cachedInstrumentSerialNumber = RepeatMethod(_GetInstrumentSerialNumber);
+            return cachedInstrumentSerialNumber;
+        }
+
+        private string RepeatMethod(Func<string> getString)
+        {
             for (int i = 0; i < numberTries; i++)
             {
-                string str = _GetDeviceType();
-                if (string.Compare(str, genericString) != 0)
+                string str = getString();
+                if (str != genericString)
                 {
-                    instrumentType = str;
                     return str;
                 }
-            }
-            return genericString;
-        }
-
-        private string GetDeviceVersion()
-        {
-            for (int i = 0; i < numberTries; i++)
-            {
-                string str = _GetDeviceVersion();
-                if (string.Compare(str, genericString) != 0)
-                    return str;
-            }
-            return genericString;
-        }
-
-        private string GetDeviceSerialNumber()
-        {
-            for (int i = 0; i < numberTries; i++)
-            {
-                string str = _GetDeviceSerialNumber();
-                if (string.Compare(str, genericString) != 0)
-                    return str;
             }
             return genericString;
         }
@@ -104,28 +100,21 @@ namespace Bev.Instruments.EE07
         private void _UpdateValues()
         {
             ClearCachedValues();
-
-            // the measurement values are read from the device
-            // by a sequence of calls described in the document
-            // E2Interface-RS232_e1.doc
-            // the order of the calls is mandatory
-
+            // see E2Interface-RS232_e1.doc
             var reply = Query(0x58, new byte[] { 0x00, 0x30, 0x1E });
             if (reply.Length != 5)
             {
-                // Console.WriteLine($"***** reply {reply.Length} bytes long");
                 return; // we need exactly 5 bytes
             }
             if (reply[4] != 0x00)
             {
-                // Console.WriteLine($"***** status byte: {reply[4]}");
                 return; // if status gives an error, return
             }
             Humidity = (reply[0] + (reply[1]) * 256) / 100.0;
             Temperature = (reply[2] + reply[3] * 256) / 100.0 - 273.15;
         }
 
-        private string _GetDeviceType()
+        private string _GetInstrumentType()
         {
             // undocumented!
             byte groupL, groupH, subGroup;
@@ -156,7 +145,7 @@ namespace Bev.Instruments.EE07
             return $"EE{groupL:00}-{subGroup}";
         }
 
-        private string _GetDeviceVersion()
+        private string _GetInstrumentVersion()
         {
             // undocumented!
             var reply = Query(0x55, new byte[] { 0x01, 0x80, 0x04 });
@@ -168,7 +157,7 @@ namespace Bev.Instruments.EE07
             return str;
         }
 
-        private string _GetDeviceSerialNumber()
+        private string _GetInstrumentSerialNumber()
         {
             // undocumented!
             var reply = Query(0x55, new byte[] { 0x01, 0x84, 0x10 });
