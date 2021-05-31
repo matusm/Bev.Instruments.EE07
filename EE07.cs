@@ -10,11 +10,10 @@ namespace Bev.Instruments.EE07
     {
         private static SerialPort comPort;
         private const string genericString = "???";     // returned if something failed
-        private const int numberTries = 5;              // number of tries before call gives up
+        private const int numberTries = 20;             // number of tries before call gives up
         private const int delayTimeForRespond = 900;    // rather long delay nececssary
         // https://docs.microsoft.com/en-us/dotnet/api/system.io.ports.serialport.close?view=dotnet-plat-ext-5.0
         private const int waitOnClose = 50;             // No actual value is given! One has to experiment with this value
-
 
         public EE07(string portName)
         {
@@ -53,38 +52,35 @@ namespace Bev.Instruments.EE07
 
         private string GetDeviceType()
         {
-            string str = genericString;
             for (int i = 0; i < numberTries; i++)
             {
-                str = _GetDeviceType();
+                string str = _GetDeviceType();
                 if (string.Compare(str, genericString) != 0)
                     return str;
             }
-            return str;
+            return genericString;
         }
 
         private string GetDeviceVersion()
         {
-            string str = genericString;
             for (int i = 0; i < numberTries; i++)
             {
-                str = _GetDeviceVersion();
+                string str = _GetDeviceVersion();
                 if (string.Compare(str, genericString) != 0)
                     return str;
             }
-            return str;
+            return genericString;
         }
 
         private string GetDeviceSerialNumber()
         {
-            string str = genericString;
             for (int i = 0; i < numberTries; i++)
             {
-                str = _GetDeviceSerialNumber();
+                string str = _GetDeviceSerialNumber();
                 if (string.Compare(str, genericString) != 0)
                     return str;
             }
-            return str;
+            return genericString;
         }
 
         private void _UpdateValues()
@@ -116,28 +112,29 @@ namespace Bev.Instruments.EE07
             // undocumented!
             byte groupL, groupH, subGroup;
             byte[] reply;
-
             // Get group designation. 0x07 = EE07 etc.
             reply = Query(0x51, new byte[] { 0x11 });
             if (reply.Length != 1)
+            {
                 return genericString;
+            }
             groupL = reply[0];
-
             // Get subgroup designation. 
             reply = Query(0x51, new byte[] { 0x21 });
             if (reply.Length != 1)
+            {
                 return genericString;
+            }
             subGroup = reply[0];
-
             // Get group H-byte
             reply = Query(0x51, new byte[] { 0x41 });
             if (reply.Length != 1)
+            {
                 return genericString;
+            }
             groupH = reply[0];
-
             // sensor type - what for?
             int sensorType = groupH * 256 + groupL;
-
             return $"EE{groupL:00}-{subGroup}";
         }
 
