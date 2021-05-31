@@ -15,13 +15,19 @@ namespace Bev.Instruments.EE07
         // https://docs.microsoft.com/en-us/dotnet/api/system.io.ports.serialport.close?view=dotnet-plat-ext-5.0
         private const int waitOnClose = 50;             // No actual value is given! One has to experiment with this value
 
+        private string instrumentType;
+        private string instrumentSerialNumber;
+        private string instrumentFirmwareVersion;
+
+
         public EE07(string portName)
         {
             DevicePort = portName.Trim();
             comPort = new SerialPort(DevicePort, 9600);
             comPort.RtsEnable = true;   // this is essential
             comPort.DtrEnable = true;	// this is essential
-            ResetValues();
+            ClearCachedValues();
+            ClearCachedInstrumentID();
         }
 
 
@@ -44,19 +50,31 @@ namespace Bev.Instruments.EE07
             }
         }
 
-        private void ResetValues()
+        private void ClearCachedValues()
         {
             Temperature = double.NaN;
             Humidity = double.NaN;
         }
 
+        private void ClearCachedInstrumentID()
+        {
+            instrumentType = genericString;
+            instrumentSerialNumber = genericString;
+            instrumentFirmwareVersion = genericString;
+        }
+
         private string GetDeviceType()
         {
+            if (string.Compare(instrumentType, genericString) != 0)
+                return instrumentType;
             for (int i = 0; i < numberTries; i++)
             {
                 string str = _GetDeviceType();
                 if (string.Compare(str, genericString) != 0)
+                {
+                    instrumentType = str;
                     return str;
+                }
             }
             return genericString;
         }
@@ -85,7 +103,7 @@ namespace Bev.Instruments.EE07
 
         private void _UpdateValues()
         {
-            ResetValues();
+            ClearCachedValues();
 
             // the measurement values are read from the device
             // by a sequence of calls described in the document
