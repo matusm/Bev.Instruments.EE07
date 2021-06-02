@@ -11,7 +11,7 @@ namespace Bev.Instruments.EE07
         private static SerialPort comPort;
         private const string genericString = "???";     // returned if something failed
         private const int numberTries = 20;             // number of tries before call gives up
-        private const int delayTimeForRespond = 900;    // rather long delay nececssary
+        private const int delayTimeForRespond = 400;    // rather long delay necessary
         // https://docs.microsoft.com/en-us/dotnet/api/system.io.ports.serialport.close?view=dotnet-plat-ext-5.0
         private const int waitOnClose = 50;             // No actual value is given, experimental
 
@@ -164,11 +164,9 @@ namespace Bev.Instruments.EE07
         private string _GetInstrumentSerialNumber()
         {
             // undocumented!
-            var reply = Query(0x55, new byte[] { 0x01, 0x84, 0x10 });
+            var reply = Query(0x55, new byte[] { 0x01, 0x84, 0x10 }, 2 * delayTimeForRespond);
             if (reply.Length == 0)
                 return genericString;
-            // this is probably useless 
-            // byte[] tempBuffer = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(reply)); // this looks peculiar
             for (int i = 0; i < reply.Length; i++)
             {
                 if (reply[i] == 0) reply[i] = 0x20; // substitute 0 by space
@@ -195,14 +193,19 @@ namespace Bev.Instruments.EE07
             return bufferList.ToArray();
         }
 
-        private byte[] Query(byte instruction, byte[] DField)
+        private byte[] Query(byte instruction, byte[] DField, int delayTime)
         {
             OpenPort();
             SendEE07(ComposeCommand(instruction, DField));
-            Thread.Sleep(delayTimeForRespond);
+            Thread.Sleep(delayTime);
             var buffer = ReadEE07();
             ClosePort();
             return AnalyzeRespond(buffer);
+        }
+
+        private byte[] Query(byte instruction, byte[] DField)
+        {
+            return Query(instruction, DField, delayTimeForRespond);
         }
 
         // This method takes the return byte array, checks if [L] is consistent,

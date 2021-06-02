@@ -1,0 +1,56 @@
+Port:         COM1
+Manufacturer: E+E Elektronik
+Type:         EE07-9
+SN:           15380500105203
+Version:      3.02
+Sensor Type:  21767
+InstrumentID: EE07-9 3.02 SN:15380500105203 @ COM1
+
+Port:         COM1
+Manufacturer: E+E Elektronik
+Type:         EE07-41
+SN:           19480500007419
+Version:      3.02
+Sensor Type:  21767
+InstrumentID: EE07-41 3.02 SN:19480500007419 @ COM1
+
+Port:         COM1
+Manufacturer: E+E Elektronik
+Type:         EE07-41
+SN:           194805000078BA
+Version:      3.02
+Sensor Type:  21767
+InstrumentID: EE07-41 3.02 SN:194805000078BA @ COM1
+
+Port:         COM1
+Manufacturer: E+E Elektronik
+Type:         EE07-41
+SN:           19480500007547
+Version:      3.02
+Sensor Type:  21767
+InstrumentID: EE07-41 3.02 SN:19480500007547 @ COM1
+
+Port:         COM1
+Manufacturer: E+E Elektronik
+Type:         EE07-41
+SN:           194805000076A5
+Version:      3.02
+Sensor Type:  21767
+InstrumentID: EE07-41 3.02 SN:194805000076A5 @ COM1
+
+Port:         COM1
+Manufacturer: E+E Elektronik
+Type:         EE07-9
+SN:           140705000087AE
+Version:      3.02
+Sensor Type:  21767
+InstrumentID: EE07-9 3.02 SN:140705000087AE @ COM1 -> SIP
+
+Port:         COM1
+Manufacturer: E+E Elektronik
+Type:         EE07-9
+SN:           15370500007869
+Version:      3.02
+Sensor Type:  21767
+InstrumentID: EE07-9 3.02 SN:15370500007869 @ COM1 -> ORS
+
