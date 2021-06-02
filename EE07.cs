@@ -13,7 +13,7 @@ namespace Bev.Instruments.EE07
         private const int numberTries = 20;             // number of tries before call gives up
         private const int delayTimeForRespond = 900;    // rather long delay nececssary
         // https://docs.microsoft.com/en-us/dotnet/api/system.io.ports.serialport.close?view=dotnet-plat-ext-5.0
-        private const int waitOnClose = 50;             // No actual value is given! One has to experiment with this value
+        private const int waitOnClose = 50;             // No actual value is given, experimental
 
         private string cachedInstrumentType;
         private string cachedInstrumentSerialNumber;
@@ -36,6 +36,7 @@ namespace Bev.Instruments.EE07
         public string InstrumentSerialNumber => GetInstrumentSerialNumber();
         public string InstrumentFirmwareVersion => GetInstrumentVersion();
         public string InstrumentID => $"{InstrumentType} {InstrumentFirmwareVersion} SN:{InstrumentSerialNumber} @ {DevicePort}";
+        public int SensorType { get; private set; }
         public double Temperature { get; private set; }
         public double Humidity { get; private set; }
 
@@ -54,6 +55,7 @@ namespace Bev.Instruments.EE07
             cachedInstrumentType = genericString;
             cachedInstrumentSerialNumber = genericString;
             cachedInstrumentFirmwareVersion = genericString;
+            SensorType = -1;
             ClearCachedValues();
         }
 
@@ -91,9 +93,11 @@ namespace Bev.Instruments.EE07
                 string str = getString();
                 if (str != genericString)
                 {
+                    //if (i > 0) Console.WriteLine($"***** {i + 1} tries!");
                     return str;
                 }
             }
+            //Console.WriteLine($"***** {numberTries}, unsuccessfull!");
             return genericString;
         }
 
@@ -141,7 +145,7 @@ namespace Bev.Instruments.EE07
             }
             groupH = reply[0];
             // sensor type - what for?
-            int sensorType = groupH * 256 + groupL;
+            SensorType = groupH * 256 + groupL; //TODO make accessible?
             return $"EE{groupL:00}-{subGroup}";
         }
 
@@ -163,14 +167,11 @@ namespace Bev.Instruments.EE07
             var reply = Query(0x55, new byte[] { 0x01, 0x84, 0x10 });
             if (reply.Length == 0)
                 return genericString;
-
             // this is probably useless 
             // byte[] tempBuffer = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(reply)); // this looks peculiar
-
-            // substitute 0 by space
             for (int i = 0; i < reply.Length; i++)
             {
-                if (reply[i] == 0) reply[i] = 0x20;
+                if (reply[i] == 0) reply[i] = 0x20; // substitute 0 by space
             }
             return Encoding.UTF8.GetString(reply).Trim();
         }
