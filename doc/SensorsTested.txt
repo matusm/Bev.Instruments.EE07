@@ -54,3 +54,11 @@ Version:      3.02
 Sensor Type:  21767
 InstrumentID: EE07-9 3.02 SN:15370500007869 @ COM1 -> ORS
 
+Port:         /dev/tty.usbserial-FTY594BQ
+Manufacturer: E+E Elektronik
+Type:         EE07-41
+SN:           194805000077FB
+Version:      3.02
+Sensor Type:  21767
+InstrumentID: EE07-41 3.02 SN:194805000077FB @ /dev/tty.usbserial-FTY594BQ
+
