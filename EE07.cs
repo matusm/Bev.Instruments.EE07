@@ -174,6 +174,21 @@ namespace Bev.Instruments.EE07
             return Encoding.UTF8.GetString(reply).Trim();
         }
 
+        private byte[] Query(byte instruction, byte[] DField, int delayTime)
+        {
+            OpenPort();
+            SendEE07(ComposeCommand(instruction, DField));
+            Thread.Sleep(delayTime);
+            var buffer = ReadEE07();
+            ClosePort();
+            return AnalyzeRespond(buffer);
+        }
+
+        private byte[] Query(byte instruction, byte[] DField)
+        {
+            return Query(instruction, DField, delayTimeForRespond);
+        }
+
         private byte[] ComposeCommand(byte BField, byte[] DField)
         {
             List<byte> bufferList = new List<byte>();
@@ -191,21 +206,6 @@ namespace Bev.Instruments.EE07
                 bsum += b;
             bufferList.Add(bsum); // [C]
             return bufferList.ToArray();
-        }
-
-        private byte[] Query(byte instruction, byte[] DField, int delayTime)
-        {
-            OpenPort();
-            SendEE07(ComposeCommand(instruction, DField));
-            Thread.Sleep(delayTime);
-            var buffer = ReadEE07();
-            ClosePort();
-            return AnalyzeRespond(buffer);
-        }
-
-        private byte[] Query(byte instruction, byte[] DField)
-        {
-            return Query(instruction, DField, delayTimeForRespond);
         }
 
         // This method takes the return byte array, checks if [L] is consistent,
