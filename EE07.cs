@@ -121,16 +121,17 @@ namespace Bev.Instruments.EE07
         private string _GetInstrumentType()
         {
             // undocumented!
-            byte groupL, groupH, subGroup;
+            byte group, groupH, subGroup;
             byte[] reply;
-            // Get group designation. 0x07 = EE07 etc.
+            // Get group designation. 0x07 = EE07 etc.,
+            // TODO for CO2 sensors two bytes
             reply = Query(0x51, new byte[] { 0x11 });
             if (reply.Length != 1)
             {
                 return genericString;
             }
-            groupL = reply[0];
-            // Get subgroup designation. 
+            group = reply[0];
+            // Get subgroup designation. 0x09, 0x29, 0x00
             reply = Query(0x51, new byte[] { 0x21 });
             if (reply.Length != 1)
             {
@@ -145,8 +146,8 @@ namespace Bev.Instruments.EE07
             }
             groupH = reply[0];
             // sensor type - what for?
-            SensorType = groupH * 256 + groupL; //TODO make accessible?
-            return $"EE{groupL:00}-{subGroup}";
+            SensorType = groupH * 256 + group; //TODO make accessible?
+            return $"EE{group:00}-{subGroup}";
         }
 
         private string _GetInstrumentVersion()
